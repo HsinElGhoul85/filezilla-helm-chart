@@ -1,0 +1,141 @@
+---
+# Source: filezilla/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: filezilla
+  labels:
+    helm.sh/chart: filezilla-0.1.0
+    app.kubernetes.io/name: filezilla
+    app.kubernetes.io/instance: filezilla
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: filezilla/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: filezilla
+  labels:
+    helm.sh/chart: filezilla-0.1.0
+    app.kubernetes.io/name: filezilla
+    app.kubernetes.io/instance: filezilla
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 3001
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app.kubernetes.io/name: filezilla
+    app.kubernetes.io/instance: filezilla
+---
+# Source: filezilla/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filezilla
+  labels:
+    helm.sh/chart: filezilla-0.1.0
+    app.kubernetes.io/name: filezilla
+    app.kubernetes.io/instance: filezilla
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: filezilla
+      app.kubernetes.io/instance: filezilla
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: filezilla-0.1.0
+        app.kubernetes.io/name: filezilla
+        app.kubernetes.io/instance: filezilla
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      imagePullSecrets:
+        - name: nexus-docker-puller
+      serviceAccountName: filezilla
+      securityContext:
+        {}
+      containers:
+        - name: filezilla
+          securityContext:
+            {}
+          image: "lscr.io/linuxserver/filezilla:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 200m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /config
+              name: filezilla-data
+      volumes:
+        - name: filezilla-data
+          persistentVolumeClaim:
+            claimName: filezilla-data-pvc
+---
+# Source: filezilla/templates/route.yaml
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: filezilla
+spec:
+  host: filezilla-ens-factory-test.apps.cne2opsin1clu01.cnam-ens.atos.net
+  to:
+    kind: Service
+    name: filezilla
+    weight: 100
+  port:
+    targetPort: 3000
+  tls:
+    termination: edge
+  wildcardPolicy: None
+---
+# Source: filezilla/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "filezilla-test-connection"
+  labels:
+    helm.sh/chart: filezilla-0.1.0
+    app.kubernetes.io/name: filezilla
+    app.kubernetes.io/instance: filezilla
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['filezilla:3000']
+  restartPolicy: Never

@@ -8,7 +8,7 @@ resources:
     memory: 128Mi
 
 imagePullSecrets:
-  - name: nexus-docker-puller
+  - name: your secret docker puller
 
 image:
   repository: lscr.io/linuxserver/filezilla
@@ -19,8 +19,8 @@ service:
   portsecure: 3001 
 
 route: 
-  dns: "apps.cne1opsin1clu01.cnam-ens.atos.net"
-  namespace: "ens-factory-utils"
+  dns: "your dns"
+  namespace: "your namespace"
 
 volumeMounts:
   - name: filezilla-data

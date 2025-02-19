@@ -1,0 +1,16 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ include "filezilla.fullname" . }}
+spec:
+  host: {{ include "filezilla.fullname" . }}-{{ .Values.route.namespace }}.{{ .Values.route.dns }}
+  to:
+    kind: Service
+    name: {{ include "filezilla.fullname" . }}
+    weight: 100
+  port:
+    targetPort: {{ .Values.service.port }}
+  tls:
+    termination: edge
+  wildcardPolicy: None
+
