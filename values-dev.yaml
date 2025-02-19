@@ -7,8 +7,6 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-imagePullSecrets:
-  - name: your secret docker puller
 
 image:
   repository: lscr.io/linuxserver/filezilla
@@ -18,9 +16,6 @@ service:
   port: 3000
   portsecure: 3001 
 
-route: 
-  dns: "your dns"
-  namespace: "your namespace"
 
 volumeMounts:
   - name: filezilla-data

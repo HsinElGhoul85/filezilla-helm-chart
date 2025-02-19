@@ -1,6 +1,6 @@
 #!/bin/sh
 
-env=$2
+env=dev
 
 
 helm upgrade --install -n $1 filezilla . -f values-$env.yaml
